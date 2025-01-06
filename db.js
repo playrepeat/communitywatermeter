@@ -1,16 +1,13 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
-// Configure the database connection
-const pool = new Pool({
-  user: 'app_user',          // Replace with your PostgreSQL username
-  host: 'localhost',
-  database: 'watermeter_db', // Replace with your database name
-  password: 'Ugreen25', // Replace with your PostgreSQL password
-  port: 5432,                // Default PostgreSQL port
-});
 
-pool.on('connect', () => {
-  console.log('Connected to the PostgreSQL database.');
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
 });
 
 module.exports = pool;
