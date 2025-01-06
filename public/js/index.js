@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginModal = document.getElementById('loginModal');
-    const registerModal = document.getElementById('registerModal');
+    const registerModal = document.getElementById('registrationModal');
     const loginLink = document.getElementById('loginLink');
     const registerLink = document.getElementById('registerLink');
     const closeLoginModal = document.getElementById('closeLoginModal');
-    const closeRegisterModal = document.getElementById('closeRegisterModal');
+    const closeRegisterLink = document.getElementById('closeRegisterLink');
 
     // Open Login Modal
     loginLink.addEventListener('click', (e) => {
@@ -24,9 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Close Register Modal
-    closeRegisterModal.addEventListener('click', () => {
-        registerModal.style.display = 'none';
+    closeRegisterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerModal.style.display = 'none'; // Corrected to hide the modal
     });
+
 
     // Close Modal on Outside Click
     window.addEventListener('click', (e) => {

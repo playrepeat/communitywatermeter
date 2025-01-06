@@ -4,11 +4,6 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db');
 const router = express.Router();
 
-// Helper function to validate email format
-function validateEmail(email) {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-}
 
 
 // Registration route
@@ -105,7 +100,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Profile page route
+
 // Profile page route
 router.get('/profile', async (req, res) => {
     if (!req.session.userId) {
@@ -161,11 +156,23 @@ router.post('/record', async (req, res) => {
         return res.status(401).json({ message: 'Unauthorized. Please log in.' });
     }
 
+    // Check if the current date is within the submission window (1st to 10th of the month)
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+
+    if (dayOfMonth < 1 || dayOfMonth > 10) {
+        return res.status(403).json({
+            message: 'You can only submit water usage data between the 1st and 10th of each month.',
+        });
+    }
+
+    // Validate water usage input
     if (!waterUsage || isNaN(waterUsage) || waterUsage <= 0) {
         return res.status(400).json({ message: 'Invalid water usage value!' });
     }
 
     try {
+        // Insert the water usage data into the database
         await pool.query(
             `INSERT INTO watermeterrecords (user_id, water_usage, notes) VALUES ($1, $2, $3)`,
             [req.session.userId, waterUsage, notes || null]
@@ -177,6 +184,7 @@ router.post('/record', async (req, res) => {
         res.status(500).json({ message: 'Internal server error!' });
     }
 });
+
 
 // previous record routes
 router.get('/records', async (req, res) => {
