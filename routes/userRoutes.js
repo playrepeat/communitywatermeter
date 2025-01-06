@@ -106,33 +106,51 @@ router.post('/login', async (req, res) => {
 });
 
 // Profile page route
+// Profile page route
 router.get('/profile', async (req, res) => {
     if (!req.session.userId) {
-        return res.redirect('/'); // Redirect to login if not logged in
+        return res.redirect('/'); // Redirect to home if not logged in
     }
 
     try {
-        const result = await pool.query('SELECT * FROM watermeterusers WHERE id = $1', [req.session.userId]);
-        const user = result.rows[0];
+        const userId = req.session.userId;
+
+        // Fetch user details
+        const userResult = await pool.query(
+            'SELECT first_name, last_name, email, apartment, time_added FROM watermeterusers WHERE id = $1',
+            [userId]
+        );
+        const user = userResult.rows[0];
 
         if (!user) {
             return res.redirect('/'); // Redirect if user not found
         }
+
+        // Fetch water meter records
+        const recordsResult = await pool.query(
+            'SELECT id, water_usage, notes, reading_date FROM watermeterrecords WHERE user_id = $1 ORDER BY reading_date DESC',
+            [userId]
+        );
+        const records = recordsResult.rows; // Fetch all records, not just the first one
 
         const userData = {
             firstName: user.first_name,
             lastName: user.last_name,
             email: user.email,
             apartmentNumber: user.apartment,
-            registrationDate: user.registration_date,
+            registrationDate: user.time_added,
         };
+        console.log('UserData:', userData);
+        console.log('Records:', records);
 
-        res.render('profile', { user: userData, userName: req.session.userName });
+        // Render profile with user details and records
+        res.render('profile', { userName: user.first_name, user: userData, records });
     } catch (error) {
-        console.error('Error fetching user profile:', error);
-        res.redirect('/');
+        console.error('Error fetching profile data:', error);
+        res.status(500).send('Internal server error');
     }
 });
+
 
 
 //water record route

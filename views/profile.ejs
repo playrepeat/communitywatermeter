@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
-    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
@@ -17,62 +17,56 @@
         </nav>
     </header>
 
-    <main class="profile-container">
-        <!-- Account Details Section -->
+    <main>
         <section class="profile-section">
             <h2>Account Details</h2>
             <p><strong>Name:</strong>
-                <%= user.first_name %>
-                    <%= user.last_name %>
+                <%= user.firstName %>
+                    <%= user.lastName %>
             </p>
             <p><strong>Email:</strong>
                 <%= user.email %>
             </p>
             <p><strong>Apartment:</strong>
-                <%= user.apartment %>
+                <%= user.apartmentNumber %>
+            </p>
+            <p><strong>Registered On:</strong>
+                <%= new Date(user.registrationDate).toLocaleDateString() %>
             </p>
         </section>
 
-        <!-- Change Password Section -->
-        <section class="profile-section">
-            <h2>Change Password</h2>
-            <form id="changePasswordForm">
-                <label for="oldPassword">Old Password:</label>
-                <input type="password" id="oldPassword" name="oldPassword" required>
-
-                <label for="newPassword">New Password:</label>
-                <input type="password" id="newPassword" name="newPassword" required>
-
-                <button type="submit">Update Password</button>
-            </form>
-        </section>
-
-        <!-- Record Water Meter Section -->
-        <section class="profile-section">
-            <h2>Record New Water Meter</h2>
-            <form id="recordUsageForm">
-                <label for="waterUsage">Water Usage (in cubic meters):</label>
-                <input type="number" id="waterUsage" name="waterUsage" min="0.01" step="0.01" required>
-
-                <label for="notes">Notes (Optional):</label>
-                <textarea id="notes" name="notes" rows="4" placeholder="Add any additional details..."></textarea>
-
-                <button type="submit">Submit</button>
-            </form>
-        </section>
-
-        <!-- View Previous Recordings Section -->
-        <section class="profile-section">
-            <h2>Previous Water Meter Recordings</h2>
-            <div id="recordsContainer">
-                <!-- Records will be dynamically loaded here -->
-            </div>
+        <section class="records-section">
+            <h2>Your Water Meter Records</h2>
+            <% if (records.length> 0) { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Reading Date</th>
+                            <th>Water Usage (m³)</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% records.forEach(record=> { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(record.reading_date).toLocaleDateString() %>
+                                </td>
+                                <td>
+                                    <%= record.water_usage %>
+                                </td>
+                                <td>
+                                    <%= record.notes || 'N/A' %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+                <% } else { %>
+                    <p>No records found. Start recording your water usage!</p>
+                    <% } %>
         </section>
     </main>
-
-
-    <script src="/js/recordUsage.js"></script>
-    <script src="/js/fetchrecords.js"></script>
 </body>
 
 </html>
