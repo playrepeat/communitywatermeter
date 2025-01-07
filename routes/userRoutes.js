@@ -89,11 +89,7 @@ router.post('/login', async (req, res) => {
             redirectUrl: '/user/profile',
         });
 
-        /*// Set session data
-        req.session.userId = user.id;
-        req.session.userName = user.first_name;
 
-        res.status(200).json({ message: 'Login successful!' });*/
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Internal server error!' });
@@ -204,6 +200,75 @@ router.get('/records', async (req, res) => {
         res.status(500).json({ message: 'Internal server error!' });
     }
 });
+
+
+
+// Change Password Route
+router.post('/changepassword', async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!req.session.userId) {
+        return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+    }
+
+    try {
+        // Fetch user details
+        const result = await pool.query(
+            'SELECT hashed_password, password_history, is_locked FROM watermeterpwd WHERE user_id = $1',
+            [req.session.userId]
+        );
+
+        const user = result.rows[0];
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        // Check if account is locked
+        if (user.is_locked) {
+            return res.status(403).json({ message: 'Account is locked. Please contact support.' });
+        }
+
+        // Verify old password
+        const isMatch = await bcrypt.compare(oldPassword, user.hashed_password);
+        if (!isMatch) {
+            // Increment failed attempts
+            await pool.query(
+                'UPDATE watermeterpwd SET failed_attempts = failed_attempts + 1 WHERE user_id = $1',
+                [req.session.userId]
+            );
+            return res.status(400).json({ message: 'Incorrect old password.' });
+        }
+
+        // Prevent password reuse
+        const passwordHistory = user.password_history || [];
+        for (const oldHash of passwordHistory) {
+            if (await bcrypt.compare(newPassword, oldHash)) {
+                return res.status(400).json({ message: 'New password cannot be the same as a previous password.' });
+            }
+        }
+
+        // Hash the new password
+        const saltRounds = 10;
+        const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Update password and reset failed attempts
+        await pool.query(
+            `
+            UPDATE watermeterpwd
+            SET hashed_password = $1,
+                password_last_changed = NOW(),
+                failed_attempts = 0,
+                password_history = jsonb_set(password_history, '{0}', to_jsonb(password::text)::jsonb, true)
+            WHERE user_id = $2
+            `,
+            [newHashedPassword, req.session.userId]
+        );
+
+        res.status(200).json({ message: 'Password updated successfully.' });
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
 
 
 

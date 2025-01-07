@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+/* document.addEventListener('DOMContentLoaded', () => {
     const changePasswordModal = document.getElementById('changePasswordModal');
     const changePasswordLink = document.getElementById('changePasswordLink');
     const closeModal = changePasswordModal.querySelector('.close');
@@ -47,4 +47,33 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Something went wrong. Please try again.');
         }
     });
+});
+*/
+document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+
+    try {
+        const response = await fetch('/user/changepassword', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ oldPassword, newPassword }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(result.message);
+            // Clear form fields
+            document.getElementById('changePasswordForm').reset();
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        alert('An error occurred. Please try again later.');
+    }
 });
